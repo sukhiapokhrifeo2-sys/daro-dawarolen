@@ -41,8 +41,8 @@
         .reset-btn:hover:not(:disabled) { background: #300; }
         .secret-display { color: #ff0; font-weight: bold; }
         
-        /* 2D Flat Heart CSS */
-        .heart-icon { color: #ffb6c1 !important; text-shadow: 0 0 8px #ffb6c1; font-family: sans-serif; display: inline-block; } 
+        /* 2D Flat Heart CSS - Greatly reduced glow */
+        .heart-icon { color: #ffb6c1 !important; text-shadow: 0 0 2px #ffb6c1; font-family: sans-serif; display: inline-block; } 
 
         /* Win Overlay Modal Styling */
         #winModal {
@@ -234,10 +234,10 @@
             
             // Dynamic text colors (Rose Gold for win, Sage Green for loss)
             const titleColor = amIWinner ? "#e0bfb8" : "#9dc183";
-            const titleShadow = amIWinner ? "0 0 10px #e0bfb8" : "0 0 10px #9dc183";
+            // Reduced glow shadow for the title text
+            const titleShadow = amIWinner ? "0 0 2px #e0bfb8" : "0 0 2px #9dc183";
             
             const msgEl = document.getElementById('winMessageText');
-            // Replaced default red emoji with forced flat text heart (&#x2665;&#xFE0E;)
             msgEl.innerHTML = `${winnerName} <span class="heart-icon">&#x2665;&#xFE0E;</span> ${loserName}<br><br>${winnerName.toUpperCase()} WINS!`;
             msgEl.style.color = titleColor;
             msgEl.style.textShadow = titleShadow;
@@ -254,14 +254,21 @@
                 codeDivider.style.borderColor = "#ffb6c1";
                 sadEmojiContainer.innerHTML = ''; 
                 
+                // Fine, tiny glitter blasts
                 activeEffectInterval = setInterval(() => {
                     confetti({
-                        particleCount: 80,
-                        spread: 100,
+                        particleCount: 120,
+                        spread: 360,
+                        startVelocity: 25,
                         origin: { 
                             x: Math.random() * 0.8 + 0.1, 
                             y: Math.random() * 0.5 + 0.1  
                         },
+                        colors: ['#ffb6c1', '#ffffff', '#ffd700', '#f4c2c2'], // Pinks, whites, soft golds
+                        shapes: ['circle'],
+                        scalar: 0.4, // Makes the particles look like tiny glitter
+                        gravity: 0.4, // Floats down softly
+                        ticks: 200,
                         zIndex: 1001
                     });
                 }, 800);
@@ -273,22 +280,25 @@
                 codeDivider.style.borderColor = "#553344";
                 sadEmojiContainer.innerHTML = '';
 
+                // Spawns much slower falling sad faces
                 activeEffectInterval = setInterval(() => {
                     const face = document.createElement('div');
                     face.innerText = retroSadFaces[Math.floor(Math.random() * retroSadFaces.length)];
                     face.className = 'sad-face';
                     
                     face.style.left = Math.random() * 100 + 'vw';
-                    face.style.animationDuration = (Math.random() * 4 + 5) + 's'; 
+                    // Increased duration to 12-18 seconds so they fall extremely slowly
+                    face.style.animationDuration = (Math.random() * 6 + 12) + 's'; 
                     face.style.opacity = Math.random() * 0.3 + 0.4; 
                     
                     sadEmojiContainer.appendChild(face);
                     
+                    // Cleanup extended to accommodate the slow fall speed
                     setTimeout(() => {
                         if (face.parentNode) face.parentNode.removeChild(face);
-                    }, 10000); 
+                    }, 19000); 
 
-                }, 400); 
+                }, 500); 
             }
             
             winModal.classList.remove('hidden');
