@@ -4,17 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DARO - Terminal</title>
+    <!-- Glitter Confetti Library -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
     <style>
         * { box-sizing: border-box; }
         body {
             background-color: #000; 
+            /* Subtle, transparent baby pink retro hearts background */
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Ctext x='25' y='25' font-size='20' fill='%23ffb6c1' fill-opacity='0.08' text-anchor='middle' dominant-baseline='middle' font-family='Courier New, monospace'%3E%E2%99%A5%3C/text%3E%3Ctext x='75' y='75' font-size='20' fill='%23ffb6c1' fill-opacity='0.08' text-anchor='middle' dominant-baseline='middle' font-family='Courier New, monospace'%3E%E2%99%A5%3C/text%3E%3C/svg%3E");
             color: #ffb6c1; /* Baby Pink */
             font-family: 'Courier New', Courier, monospace;
             padding: 20px; margin: 0;
+            min-height: 100vh;
         }
         h1 { text-align: center; border-bottom: 1px solid #ffb6c1; padding-bottom: 10px; font-size: 24px; }
-        .setup-screen, .game-screen { display: flex; flex-direction: column; gap: 15px; max-width: 600px; margin: 0 auto; }
+        .setup-screen, .game-screen { display: flex; flex-direction: column; gap: 15px; max-width: 600px; margin: 0 auto; background: rgba(0, 0, 0, 0.7); border-radius: 8px; padding: 10px; }
         .hidden { display: none !important; }
         
         label { display: block; margin-bottom: 5px; }
@@ -28,8 +32,8 @@
         button:disabled { border-color: #333; color: #333; cursor: not-allowed; }
         
         .columns { display: flex; justify-content: space-between; gap: 20px; margin-top: 20px; }
-        .column { flex: 1; border: 1px solid #ffb6c1; padding: 10px; height: 250px; overflow-y: auto; }
-        .status { border: 1px dashed #ffb6c1; padding: 10px; min-height: 20px; margin-top: 10px; word-wrap: break-word; }
+        .column { flex: 1; border: 1px solid #ffb6c1; padding: 10px; height: 250px; overflow-y: auto; background: rgba(0, 0, 0, 0.85); }
+        .status { border: 1px dashed #ffb6c1; padding: 10px; min-height: 20px; margin-top: 10px; word-wrap: break-word; background: rgba(0, 0, 0, 0.85); }
         .win-history { margin-top: 20px; border-top: 1px solid #ffb6c1; padding-top: 10px; }
         .history-controls { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; flex-wrap: wrap; gap: 10px; }
         
@@ -74,6 +78,7 @@
 </head>
 <body>
 
+    <!-- WIN OVERLAY -->
     <div id="winModal" class="hidden">
         <div id="stormClouds" class="hidden">☁️ ⛈️ ☁️ 🌧️ ☁️</div>
         <div id="winModalContent">
@@ -208,7 +213,7 @@
             if (oppInboxRef) push(oppInboxRef, data);
         }
 
-        // --- GLITTER, RAIN, & WIN DISPLAY FUNCTION ---
+        // --- GLITTER, SLOW RAIN, & WIN DISPLAY FUNCTION ---
         function showWinScreen(winnerName, loserName, myCode, oppCode, amIWinner) {
             document.getElementById('winMessageText').innerHTML = `${winnerName} ❤️ ${loserName}<br><br>${winnerName.toUpperCase()} WINS!`;
             
@@ -244,21 +249,21 @@
                 codeDivider.style.borderColor = "#4682b4";
                 stormClouds.classList.remove('hidden');
 
-                // Fast-falling tiny circles that simulate straight rain drops
+                // SLOW falling tiny circles that simulate straight rain drops
                 activeEffectInterval = setInterval(() => {
                     confetti({
-                        particleCount: 8,       
+                        particleCount: 4,       
                         angle: 270,             // Straight down
-                        spread: 10,             // Minimal sideways drift
+                        spread: 15,             // Minimal sideways drift
                         origin: { x: Math.random(), y: -0.1 }, // Random spot at the very top
                         colors: ['#a0c4ff', '#4682b4', '#708090'], // Rain colors
                         shapes: ['circle'],     // Round drops, no fluttering paper
-                        gravity: 2.5,           // Fall fast
-                        scalar: 0.4,            // Tiny drops
-                        ticks: 400,             // Let them fall all the way down
+                        gravity: 0.4,           // Changed from 2.5 to 0.4 for SLOW fall
+                        scalar: 0.5,            // Tiny drops
+                        ticks: 600,             // Live longer so they reach the bottom slowly
                         zIndex: 1001
                     });
-                }, 50); // Fires extremely rapidly to simulate continuous rain
+                }, 100); 
             }
             
             winModal.classList.remove('hidden');
