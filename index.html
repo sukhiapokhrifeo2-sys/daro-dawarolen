@@ -42,7 +42,7 @@
         .secret-display { color: #ff0; font-weight: bold; }
         
         /* 2D Flat Heart CSS */
-        .heart-icon { color: #ffb6c1; text-shadow: 0 0 8px #ffb6c1; font-family: sans-serif; display: inline-block; } 
+        .heart-icon { color: #ffb6c1 !important; text-shadow: 0 0 8px #ffb6c1; font-family: sans-serif; display: inline-block; } 
 
         /* Win Overlay Modal Styling */
         #winModal {
@@ -105,7 +105,7 @@
         </div>
     </div>
 
-    <h1><span class="heart-icon">♥</span> DARO TERMINAL <span class="heart-icon">♥</span></h1>
+    <h1><span class="heart-icon">&#x2665;&#xFE0E;</span> DARO TERMINAL <span class="heart-icon">&#x2665;&#xFE0E;</span></h1>
 
     <div id="setupScreen" class="setup-screen">
         <div>
@@ -237,7 +237,8 @@
             const titleShadow = amIWinner ? "0 0 10px #e0bfb8" : "0 0 10px #9dc183";
             
             const msgEl = document.getElementById('winMessageText');
-            msgEl.innerHTML = `${winnerName} <span class="heart-icon">♥</span> ${loserName}<br><br>${winnerName.toUpperCase()} WINS!`;
+            // Replaced default red emoji with forced flat text heart (&#x2665;&#xFE0E;)
+            msgEl.innerHTML = `${winnerName} <span class="heart-icon">&#x2665;&#xFE0E;</span> ${loserName}<br><br>${winnerName.toUpperCase()} WINS!`;
             msgEl.style.color = titleColor;
             msgEl.style.textShadow = titleShadow;
             
