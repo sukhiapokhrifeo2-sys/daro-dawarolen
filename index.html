@@ -224,6 +224,7 @@
                 codeDivider.style.borderColor = "#ffb6c1";
                 stormClouds.classList.add('hidden');
                 
+                // Colorful rainbow confetti for the winner
                 activeEffectInterval = setInterval(() => {
                     confetti({
                         particleCount: 80,
@@ -232,7 +233,6 @@
                             x: Math.random() * 0.8 + 0.1, 
                             y: Math.random() * 0.5 + 0.1  
                         },
-                        colors: ['#ffb6c1', '#ffc0cb', '#f4c2c2', '#ffffff'],
                         zIndex: 1001
                     });
                 }, 800);
@@ -244,19 +244,21 @@
                 codeDivider.style.borderColor = "#4682b4";
                 stormClouds.classList.remove('hidden');
 
+                // Fast-falling tiny circles that simulate straight rain drops
                 activeEffectInterval = setInterval(() => {
                     confetti({
-                        particleCount: 20,
-                        angle: 270,       
-                        spread: 180,      
-                        origin: { x: 0.5, y: -0.1 }, 
-                        colors: ['#4682b4', '#708090', '#778899', '#a9a9a9'],
-                        gravity: 2,       
-                        scalar: 0.8,      
-                        ticks: 200,       
+                        particleCount: 8,       
+                        angle: 270,             // Straight down
+                        spread: 10,             // Minimal sideways drift
+                        origin: { x: Math.random(), y: -0.1 }, // Random spot at the very top
+                        colors: ['#a0c4ff', '#4682b4', '#708090'], // Rain colors
+                        shapes: ['circle'],     // Round drops, no fluttering paper
+                        gravity: 2.5,           // Fall fast
+                        scalar: 0.4,            // Tiny drops
+                        ticks: 400,             // Let them fall all the way down
                         zIndex: 1001
                     });
-                }, 150); 
+                }, 50); // Fires extremely rapidly to simulate continuous rain
             }
             
             winModal.classList.remove('hidden');
