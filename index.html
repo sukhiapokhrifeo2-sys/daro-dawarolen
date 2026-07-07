@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DARO - Terminal</title>
-    <!-- Glitter Confetti Library -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
     <style>
         * { box-sizing: border-box; }
@@ -43,23 +42,35 @@
         
         .heart-icon { color: #ffb6c1 !important; text-shadow: 0 0 2px #ffb6c1; font-family: sans-serif; display: inline-block; } 
 
-        /* Small Retro Modal Styling */
         #winModal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
-            z-index: 1000; display: flex; justify-content: center; align-items: center; padding: 20px;
+            background-color: rgba(0, 0, 0, 0.95);
+            z-index: 1000; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; padding: 20px;
+            transition: background-color 0.5s;
+            overflow: hidden;
         }
         #winModalContent {
-            border: 1px solid #ffb6c1; padding: 20px; background: #000;
-            max-width: 350px; width: 100%; text-align: center; position: relative;
+            border: 2px dashed #ffb6c1; padding: 30px; background: #000;
+            max-width: 500px; width: 100%; text-align: center; position: relative;
+            z-index: 1002; transition: all 0.5s;
         }
-        #winMessageText { font-size: 18px; margin-top: 0; margin-bottom: 15px; }
-        .code-reveal { font-size: 14px; margin: 5px 0; color: #fff; }
-        .code-reveal span { font-weight: bold; }
+        #winMessageText { font-size: 28px; margin-top: 0; transition: color 0.3s; }
+        .code-reveal { font-size: 20px; margin: 10px 0; color: #fff; }
+        .code-reveal span { font-weight: bold; font-size: 24px; }
         
-        #sadEmojiContainer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1001; }
-        .sad-face { position: absolute; top: -50px; color: #ffb6c1; font-size: 22px; pointer-events: none; animation: slowFall linear forwards; }
-        @keyframes slowFall { 0% { transform: translateY(0); } 100% { transform: translateY(110vh); } }
+        #sadEmojiContainer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 1001;
+        }
+        .sad-face {
+            position: absolute; top: -50px; color: #ffb6c1; font-size: 22px;
+            pointer-events: none; animation: slowFall linear forwards;
+        }
+        @keyframes slowFall {
+            0% { transform: translateY(0) rotate(0deg); }
+            100% { transform: translateY(110vh) rotate(360deg); }
+        }
 
         @media (max-width: 600px) {
             input { max-width: 100%; }
@@ -76,33 +87,67 @@
         <div id="sadEmojiContainer"></div>
         <div id="winModalContent">
             <h1 id="winMessageText"></h1>
-            <div id="myCodeReveal" class="code-reveal"></div>
-            <div id="oppCodeReveal" class="code-reveal"></div>
-            <button id="closeWinModalBtn" style="margin-top: 15px;">CONTINUE</button>
+            <div id="codeDivider" style="border-top: 1px solid #ffb6c1; border-bottom: 1px solid #ffb6c1; padding: 15px 0; margin: 20px 0;">
+                <div id="myCodeReveal" class="code-reveal"></div>
+                <div id="oppCodeReveal" class="code-reveal"></div>
+            </div>
+            <button id="closeWinModalBtn">CONTINUE</button>
         </div>
     </div>
 
     <h1><span class="heart-icon">&#x2665;&#xFE0E;</span> DARO TERMINAL <span class="heart-icon">&#x2665;&#xFE0E;</span></h1>
 
-    <!-- Setup/Game Screens... same as before -->
     <div id="setupScreen" class="setup-screen">
-        <div><label>ENTER YOUR NAME: </label><input type="text" id="playerNameInput" placeholder="Player"></div>
-        <div><button id="hostBtn" disabled>HOST GAME</button></div>
-        <div style="margin-top: 15px;"><label>CONNECT TO ROOM ID: </label><input type="text" id="peerIdInput" placeholder="Enter ID"><button id="joinBtn" disabled>JOIN GAME</button></div>
-        <div id="connectionStatus" class="status">Status: Enter your name...</div>
+        <div>
+            <label>ENTER YOUR NAME: </label>
+            <input type="text" id="playerNameInput" placeholder="Player">
+        </div>
+        <div>
+            <button id="hostBtn" disabled>HOST GAME (GET CONNECTION ID)</button>
+        </div>
+        <div style="margin-top: 15px;">
+            <label>CONNECT TO ROOM ID: </label>
+            <input type="text" id="peerIdInput" placeholder="Enter Connection ID">
+            <button id="joinBtn" disabled>JOIN GAME</button>
+        </div>
+        <div id="connectionStatus" class="status">Status: Enter your name to begin...</div>
     </div>
 
     <div id="gameScreen" class="game-screen hidden">
         <div>ROOM ID: <span id="displayPeerId" style="color: #fff; font-weight: bold;"></span></div>
         <div id="secretCodeDisplay">SECRET CODE: <span id="displaySecretNumber" class="secret-display">NOT LOCKED YET</span></div>
         <div id="turnIndicator" class="status">Connecting...</div>
-        <div id="lockSection" class="hidden"><label>LOCK YOUR 4-DIGIT NUMBER: </label><input type="password" id="lockInput" maxlength="4" placeholder="****" inputmode="numeric"><button id="lockBtn">LOCK</button></div>
-        <div id="guessSection" class="hidden"><label>ENTER 4-DIGIT GUESS: </label><input type="text" id="guessInput" maxlength="4" placeholder="1234" inputmode="numeric"><button id="guessBtn">SUBMIT GUESS</button></div>
-        <div class="columns">
-            <div class="column"><h3 style="margin-top: 0;">YOUR GUESSES</h3><div id="myLogs"></div></div>
-            <div class="column"><h3 style="margin-top: 0;">OPPONENT GUESSES</h3><div id="oppLogs"></div></div>
+
+        <div id="lockSection" class="hidden">
+            <label>LOCK YOUR 4-DIGIT NUMBER: </label>
+            <input type="password" id="lockInput" maxlength="4" placeholder="****" inputmode="numeric">
+            <button id="lockBtn">LOCK</button>
         </div>
-        <div class="win-history"><h3 style="margin-bottom: 5px;">WIN HISTORY</h3><div class="history-controls"><div id="winHistoryLog">Awaiting setup...</div><button id="resetScoresBtn" class="reset-btn">RESET ALL SCORES</button></div></div>
+
+        <div id="guessSection" class="hidden">
+            <label>ENTER 4-DIGIT GUESS: </label>
+            <input type="text" id="guessInput" maxlength="4" placeholder="1234" inputmode="numeric">
+            <button id="guessBtn">SUBMIT GUESS</button>
+        </div>
+
+        <div class="columns">
+            <div class="column">
+                <h3 style="margin-top: 0;">YOUR GUESSES</h3>
+                <div id="myLogs"></div>
+            </div>
+            <div class="column">
+                <h3 style="margin-top: 0;">OPPONENT GUESSES</h3>
+                <div id="oppLogs"></div>
+            </div>
+        </div>
+
+        <div class="win-history">
+            <h3 style="margin-bottom: 5px;">WIN HISTORY</h3>
+            <div class="history-controls">
+                <div id="winHistoryLog">Awaiting setup...</div>
+                <button id="resetScoresBtn" class="reset-btn">RESET ALL SCORES</button>
+            </div>
+        </div>
     </div>
 
     <script type="module">
@@ -124,11 +169,15 @@
 
         let myName = "", oppName = "Opponent", mySecretNum = "", oppSecretNum = "", myTurn = false, isHost = false, winHistory = {}, roundStarter = true, activeEffectInterval = null, myInboxRef = null, oppInboxRef = null;
 
-        const setupScreen = document.getElementById('setupScreen'), gameScreen = document.getElementById('gameScreen'), connStatus = document.getElementById('connectionStatus'), turnIndicator = document.getElementById('turnIndicator'), lockSection = document.getElementById('lockSection'), guessSection = document.getElementById('guessSection'), playerNameInput = document.getElementById('playerNameInput'), hostBtn = document.getElementById('hostBtn'), joinBtn = document.getElementById('joinBtn'), winModal = document.getElementById('winModal'), sadEmojiContainer = document.getElementById('sadEmojiContainer');
+        const setupScreen = document.getElementById('setupScreen'), gameScreen = document.getElementById('gameScreen'), connStatus = document.getElementById('connectionStatus'), turnIndicator = document.getElementById('turnIndicator'), lockSection = document.getElementById('lockSection'), guessSection = document.getElementById('guessSection'), playerNameInput = document.getElementById('playerNameInput'), hostBtn = document.getElementById('hostBtn'), joinBtn = document.getElementById('joinBtn'), winModal = document.getElementById('winModal'), winModalContent = document.getElementById('winModalContent'), codeDivider = document.getElementById('codeDivider'), sadEmojiContainer = document.getElementById('sadEmojiContainer');
+
+        const retroSadFaces = [':(', 'T_T', ';_;', '</3', 'x_x', '☹'];
 
         playerNameInput.addEventListener('input', (e) => {
             const hasName = e.target.value.trim().length > 0;
             hostBtn.disabled = !hasName; joinBtn.disabled = !hasName;
+            if (hasName) connStatus.innerText = "Status: Ready to Host or Join.";
+            else connStatus.innerText = "Status: Enter your name to begin...";
         });
 
         function generateShortId() { return Math.random().toString(36).substring(2, 7).toUpperCase(); }
@@ -136,29 +185,51 @@
 
         function showWinScreen(winnerName, loserName, myCode, oppCode, amIWinner) {
             const titleColor = amIWinner ? "#e0bfb8" : "#9dc183";
+            const titleShadow = amIWinner ? "0 0 2px #e0bfb8" : "0 0 2px #9dc183";
             const msgEl = document.getElementById('winMessageText');
-            msgEl.innerHTML = `${winnerName} <span class="heart-icon">&#x2665;&#xFE0E;</span> ${loserName}<br>${winnerName.toUpperCase()} WINS!`;
-            msgEl.style.color = titleColor;
+            msgEl.innerHTML = `${winnerName} <span class="heart-icon">&#x2665;&#xFE0E;</span> ${loserName}<br><br>${winnerName.toUpperCase()} WINS!`;
+            msgEl.style.color = titleColor; msgEl.style.textShadow = titleShadow;
             
-            document.getElementById('myCodeReveal').innerHTML = `${myName.toUpperCase()}'S CODE: <span>${myCode}</span>`;
-            document.getElementById('oppCodeReveal').innerHTML = `${oppName.toUpperCase()}'S CODE: <span>${oppCode}</span>`;
+            let myColor = amIWinner ? "#ffb6c1" : "#fff";
+            let oppColor = amIWinner ? "#fff" : "#ffb6c1";
+            
+            document.getElementById('myCodeReveal').innerHTML = `${myName.toUpperCase()}'S CODE: <span style="color:${myColor}">${myCode}</span>`;
+            document.getElementById('oppCodeReveal').innerHTML = `${oppName.toUpperCase()}'S CODE: <span style="color:${oppColor}">${oppCode}</span>`;
             
             if (amIWinner) {
-                activeEffectInterval = setInterval(() => { confetti({ particleCount: 50, spread: 150, origin: { x: Math.random(), y: Math.random() }, colors: ['#ffb6c1', '#ffffff'], scalar: 0.4, gravity: 0.4 }); }, 500);
+                winModal.style.backgroundColor = "rgba(0, 0, 0, 0.95)";
+                winModalContent.style.borderColor = "#ffb6c1";
+                codeDivider.style.borderColor = "#ffb6c1";
+                activeEffectInterval = setInterval(() => { confetti({ particleCount: 120, spread: 360, startVelocity: 25, origin: { x: Math.random(), y: Math.random() }, colors: ['#ffb6c1', '#ffffff', '#ffd700'], scalar: 0.4, gravity: 0.4, ticks: 200, zIndex: 1001 }); }, 800);
             } else {
+                winModal.style.backgroundColor = "rgba(10, 5, 10, 0.97)"; 
+                winModalContent.style.borderColor = "#553344"; 
+                winModalContent.style.backgroundColor = "#000"; 
+                codeDivider.style.borderColor = "#553344";
                 activeEffectInterval = setInterval(() => {
-                    const face = document.createElement('div'); face.innerText = [':(', 'T_T', ';_;', 'x_x'][Math.floor(Math.random()*4)]; face.className = 'sad-face';
-                    face.style.left = Math.random() * 100 + 'vw'; face.style.animationDuration = (Math.random() * 5 + 10) + 's';
-                    sadEmojiContainer.appendChild(face); setTimeout(() => { if(face.parentNode) face.remove() }, 20000);
-                }, 500);
+                    const face = document.createElement('div');
+                    face.innerText = retroSadFaces[Math.floor(Math.random() * retroSadFaces.length)];
+                    face.className = 'sad-face';
+                    face.style.left = Math.random() * 100 + 'vw';
+                    face.style.animationDuration = (Math.random() * 6 + 12) + 's'; 
+                    face.style.opacity = Math.random() * 0.3 + 0.4; 
+                    sadEmojiContainer.appendChild(face);
+                    setTimeout(() => { if (face.parentNode) face.parentNode.removeChild(face); }, 20000); 
+                }, 500); 
             }
             winModal.classList.remove('hidden');
         }
 
-        document.getElementById('closeWinModalBtn').onclick = () => { winModal.classList.add('hidden'); sadEmojiContainer.innerHTML = ''; if (activeEffectInterval) clearInterval(activeEffectInterval); };
+        document.getElementById('closeWinModalBtn').onclick = () => {
+            winModal.classList.add('hidden');
+            sadEmojiContainer.innerHTML = ''; 
+            if (activeEffectInterval) { clearInterval(activeEffectInterval); activeEffectInterval = null; }
+        };
 
+        // --- GAME LOGIC ---
         hostBtn.onclick = async () => {
             myName = playerNameInput.value.trim(); isHost = true;
+            connStatus.innerText = "Status: Creating secure Cloud Room...";
             const shortRoomId = generateShortId();
             myInboxRef = ref(db, `rooms/${shortRoomId}/host_inbox`);
             oppInboxRef = ref(db, `rooms/${shortRoomId}/guest_inbox`);
@@ -171,6 +242,7 @@
         joinBtn.onclick = () => {
             myName = playerNameInput.value.trim(); isHost = false;
             const targetId = document.getElementById('peerIdInput').value.trim().toUpperCase();
+            if (!targetId) return alert("Please enter the Room ID first.");
             myInboxRef = ref(db, `rooms/${targetId}/guest_inbox`);
             oppInboxRef = ref(db, `rooms/${targetId}/host_inbox`);
             document.getElementById('displayPeerId').innerText = targetId;
@@ -182,41 +254,82 @@
         function handleIncomingData(data) {
             if (data.type === 'INIT' || data.type === 'INIT_ACK') {
                 oppName = data.name; turnIndicator.innerText = `Connected to ${oppName}. Please lock your number.`;
-                lockSection.classList.remove('hidden');
+                lockSection.classList.remove('hidden'); initWinHistory();
                 if (data.type === 'INIT' && isHost) sendToOpponent({ type: 'INIT_ACK', name: myName });
             }
             if (data.type === 'LOCKED') { oppSecretNum = data.number; if (mySecretNum) startMatch(); }
             if (data.type === 'GUESS') evaluateOpponentGuess(data.guess);
+            if (data.type === 'RESET_SCORES') processScoreReset(false);
         }
 
-        function calculateCorrect(guess, secret) { let c = 0; for(let i=0; i<4; i++) if(guess[i] === secret[i]) c++; return c; }
+        function calculateCorrect(guess, secret) {
+            let correct = 0;
+            for (let i = 0; i < 4; i++) if (guess[i] === secret[i]) correct++;
+            return correct;
+        }
 
         document.getElementById('lockBtn').onclick = () => {
-            mySecretNum = document.getElementById('lockInput').value.trim();
-            document.getElementById('displaySecretNumber').innerText = mySecretNum; lockSection.classList.add('hidden');
-            sendToOpponent({ type: 'LOCKED', number: mySecretNum });
-            if (oppSecretNum) startMatch(); else turnIndicator.innerText = `Waiting for ${oppName}...`;
+            const val = document.getElementById('lockInput').value.trim();
+            if (val.length !== 4 || isNaN(val)) return alert("Error: Must be 4 digits.");
+            mySecretNum = val; document.getElementById('displaySecretNumber').innerText = val; lockSection.classList.add('hidden');
+            sendToOpponent({ type: 'LOCKED', number: val });
+            if (oppSecretNum) startMatch();
+            else turnIndicator.innerText = `Number locked. Waiting for ${oppName}...`;
         };
 
-        function startMatch() { myTurn = isHost ? roundStarter : !roundStarter; turnIndicator.innerText = myTurn ? "YOUR TURN" : "OPPONENT'S TURN"; guessSection.classList.remove('hidden'); }
+        function startMatch() { myTurn = isHost ? roundStarter : !roundStarter; updateTurnUI(); guessSection.classList.remove('hidden'); }
 
         document.getElementById('guessBtn').onclick = () => {
+            if (!myTurn) return alert("Wait! It's your opponent's turn.");
             const guess = document.getElementById('guessInput').value.trim();
+            if (guess.length !== 4 || isNaN(guess)) return alert("Error: Enter a 4-digit guess.");
+            
             let correct = calculateCorrect(guess, oppSecretNum);
-            alert(`Correct digits: ${correct}`);
-            if (correct === 4) { showWinScreen(myName, oppName, mySecretNum, oppSecretNum, true); sendToOpponent({ type: 'GUESS', guess: guess }); resetRound(); }
-            else { sendToOpponent({ type: 'GUESS', guess: guess }); myTurn = false; turnIndicator.innerText = "OPPONENT'S TURN"; document.getElementById('guessInput').value = ""; }
+            
+            if (correct === 4) {
+                showWinScreen(myName, oppName, mySecretNum, oppSecretNum, true);
+                sendToOpponent({ type: 'GUESS', guess: guess });
+                winHistory[myName]++; saveAndRefreshHistory(); resetRound();
+            } else {
+                alert(`Digits correct: ${correct}`);
+                logToColumn('myLogs', `${guess} -> ${correct} correct`);
+                sendToOpponent({ type: 'GUESS', guess: guess });
+                myTurn = false; updateTurnUI(); document.getElementById('guessInput').value = "";
+            }
         };
 
         function evaluateOpponentGuess(guess) {
             let correct = calculateCorrect(guess, mySecretNum);
-            alert(`${oppName} guessed. Correct: ${correct}`);
-            if (correct === 4) { showWinScreen(oppName, myName, mySecretNum, oppSecretNum, false); resetRound(); }
-            else { myTurn = true; turnIndicator.innerText = "YOUR TURN"; }
+            if (correct === 4) {
+                showWinScreen(oppName, myName, mySecretNum, oppSecretNum, false);
+                winHistory[oppName]++; saveAndRefreshHistory(); resetRound();
+            } else {
+                alert(`${oppName} guessed: ${correct} digits correct`);
+                logToColumn('oppLogs', `${guess} -> ${correct} correct`);
+                myTurn = true; updateTurnUI();
+            }
         }
 
-        function resetRound() { 
-            mySecretNum = ""; oppSecretNum = ""; lockSection.classList.remove('hidden'); guessSection.classList.add('hidden'); roundStarter = !roundStarter; 
+        function initWinHistory() {
+            const saved = localStorage.getItem('daro_history_v2');
+            if (saved) winHistory = JSON.parse(saved);
+            if (!winHistory[myName]) winHistory[myName] = 0;
+            if (!winHistory[oppName]) winHistory[oppName] = 0;
+            updateWinHistoryUI();
+        }
+
+        function updateTurnUI() { turnIndicator.innerText = myTurn ? "YOUR TURN: Enter a guess." : `Waiting for ${oppName}...`; }
+        function logToColumn(id, text) { document.getElementById(id).innerHTML += `<div>> ${text}</div>`; }
+        function saveAndRefreshHistory() { localStorage.setItem('daro_history_v2', JSON.stringify(winHistory)); updateWinHistoryUI(); }
+        function updateWinHistoryUI() { document.getElementById('winHistoryLog').innerText = `${myName.toUpperCase()}: ${winHistory[myName] || 0} Wins | ${oppName.toUpperCase()}: ${winHistory[oppName] || 0} Wins`; }
+        document.getElementById('resetScoresBtn').onclick = () => { if (confirm("Clear scoreboard?")) processScoreReset(true); };
+        function processScoreReset(isInitiator) { winHistory[myName] = 0; winHistory[oppName] = 0; saveAndRefreshHistory(); if (isInitiator) sendToOpponent({ type: 'RESET_SCORES' }); }
+        function resetRound() {
+            mySecretNum = ""; oppSecretNum = ""; document.getElementById('myLogs').innerHTML = ""; document.getElementById('oppLogs').innerHTML = "";
+            document.getElementById('lockInput').value = ""; document.getElementById('guessInput').value = "";
+            document.getElementById('displaySecretNumber').innerText = "NOT LOCKED YET";
+            lockSection.classList.remove('hidden'); guessSection.classList.add('hidden');
+            roundStarter = !roundStarter; turnIndicator.innerText = "Round over. Lock a new number!";
         }
     </script>
 </body>
