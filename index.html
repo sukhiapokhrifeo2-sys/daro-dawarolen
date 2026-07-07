@@ -9,9 +9,8 @@
         * { box-sizing: border-box; }
         body {
             background-color: #000; 
-            /* Subtle, transparent baby pink retro hearts background */
             background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Ctext x='25' y='25' font-size='20' fill='%23ffb6c1' fill-opacity='0.08' text-anchor='middle' dominant-baseline='middle' font-family='Courier New, monospace'%3E%E2%99%A5%3C/text%3E%3Ctext x='75' y='75' font-size='20' fill='%23ffb6c1' fill-opacity='0.08' text-anchor='middle' dominant-baseline='middle' font-family='Courier New, monospace'%3E%E2%99%A5%3C/text%3E%3C/svg%3E");
-            color: #ffb6c1; /* Baby Pink */
+            color: #ffb6c1; 
             font-family: 'Courier New', Courier, monospace;
             padding: 20px; margin: 0;
             min-height: 100vh;
@@ -41,10 +40,8 @@
         .reset-btn:hover:not(:disabled) { background: #300; }
         .secret-display { color: #ff0; font-weight: bold; }
         
-        /* 2D Flat Heart CSS - Greatly reduced glow */
         .heart-icon { color: #ffb6c1 !important; text-shadow: 0 0 2px #ffb6c1; font-family: sans-serif; display: inline-block; } 
 
-        /* Win Overlay Modal Styling */
         #winModal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(0, 0, 0, 0.95);
@@ -62,21 +59,14 @@
         .code-reveal { font-size: 20px; margin: 10px 0; color: #fff; }
         .code-reveal span { font-weight: bold; font-size: 24px; }
         
-        /* Sad Emojis Container for Loser */
         #sadEmojiContainer {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none; z-index: 1001;
         }
-
         .sad-face {
-            position: absolute;
-            top: -50px;
-            color: #ffb6c1; 
-            font-size: 22px;
-            pointer-events: none;
-            animation: slowFall linear forwards;
+            position: absolute; top: -50px; color: #ffb6c1; font-size: 22px;
+            pointer-events: none; animation: slowFall linear forwards;
         }
-
         @keyframes slowFall {
             0% { transform: translateY(0) rotate(0deg); }
             100% { transform: translateY(110vh) rotate(360deg); }
@@ -164,9 +154,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getDatabase, ref, push, onChildAdded, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-        // ==========================================
-        // YOUR FIREBASE CONFIGURATION 
-        // ==========================================
         const firebaseConfig = {
             apiKey: "AIzaSyA-7Du9BR1hyC1Y-_ZxRNzLtdmuehQiwek",
             authDomain: "daro-game.firebaseapp.com",
@@ -176,71 +163,32 @@
             messagingSenderId: "597207359398",
             appId: "1:597207359398:web:96b71d4584194d82eaf967"
         };
-        // ==========================================
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        let myName = "";
-        let oppName = "Opponent";
-        let mySecretNum = "";
-        let oppSecretNum = "";
-        let myTurn = false;
-        let isHost = false; 
-        let winHistory = {};
-        let roundStarter = true; 
-        let activeEffectInterval = null; 
-        
-        let myInboxRef = null;
-        let oppInboxRef = null;
+        let myName = "", oppName = "Opponent", mySecretNum = "", oppSecretNum = "", myTurn = false, isHost = false, winHistory = {}, roundStarter = true, activeEffectInterval = null, myInboxRef = null, oppInboxRef = null;
 
-        const setupScreen = document.getElementById('setupScreen');
-        const gameScreen = document.getElementById('gameScreen');
-        const connStatus = document.getElementById('connectionStatus');
-        const turnIndicator = document.getElementById('turnIndicator');
-        const lockSection = document.getElementById('lockSection');
-        const guessSection = document.getElementById('guessSection');
-        const playerNameInput = document.getElementById('playerNameInput');
-        const hostBtn = document.getElementById('hostBtn');
-        const joinBtn = document.getElementById('joinBtn');
-        const winModal = document.getElementById('winModal');
-        const winModalContent = document.getElementById('winModalContent');
-        const codeDivider = document.getElementById('codeDivider');
-        const sadEmojiContainer = document.getElementById('sadEmojiContainer');
+        const setupScreen = document.getElementById('setupScreen'), gameScreen = document.getElementById('gameScreen'), connStatus = document.getElementById('connectionStatus'), turnIndicator = document.getElementById('turnIndicator'), lockSection = document.getElementById('lockSection'), guessSection = document.getElementById('guessSection'), playerNameInput = document.getElementById('playerNameInput'), hostBtn = document.getElementById('hostBtn'), joinBtn = document.getElementById('joinBtn'), winModal = document.getElementById('winModal'), winModalContent = document.getElementById('winModalContent'), codeDivider = document.getElementById('codeDivider'), sadEmojiContainer = document.getElementById('sadEmojiContainer');
 
         const retroSadFaces = [':(', 'T_T', ';_;', '</3', 'x_x', '☹'];
 
         playerNameInput.addEventListener('input', (e) => {
             const hasName = e.target.value.trim().length > 0;
-            hostBtn.disabled = !hasName;
-            joinBtn.disabled = !hasName;
-            if (hasName && connStatus.innerText.includes("Enter your name")) {
-                connStatus.innerText = "Status: Ready to Host or Join.";
-            } else if (!hasName) {
-                connStatus.innerText = "Status: Enter your name to begin...";
-            }
+            hostBtn.disabled = !hasName; joinBtn.disabled = !hasName;
+            if (hasName) connStatus.innerText = "Status: Ready to Host or Join.";
+            else connStatus.innerText = "Status: Enter your name to begin...";
         });
 
-        function generateShortId() {
-            return Math.random().toString(36).substring(2, 7).toUpperCase();
-        }
+        function generateShortId() { return Math.random().toString(36).substring(2, 7).toUpperCase(); }
+        function sendToOpponent(data) { if (oppInboxRef) push(oppInboxRef, data); }
 
-        function sendToOpponent(data) {
-            if (oppInboxRef) push(oppInboxRef, data);
-        }
-
-        // --- GLITTER, EMOJIS, & WIN DISPLAY FUNCTION ---
         function showWinScreen(winnerName, loserName, myCode, oppCode, amIWinner) {
-            
-            // Dynamic text colors (Rose Gold for win, Sage Green for loss)
             const titleColor = amIWinner ? "#e0bfb8" : "#9dc183";
-            // Reduced glow shadow for the title text
             const titleShadow = amIWinner ? "0 0 2px #e0bfb8" : "0 0 2px #9dc183";
-            
             const msgEl = document.getElementById('winMessageText');
             msgEl.innerHTML = `${winnerName} <span class="heart-icon">&#x2665;&#xFE0E;</span> ${loserName}<br><br>${winnerName.toUpperCase()} WINS!`;
-            msgEl.style.color = titleColor;
-            msgEl.style.textShadow = titleShadow;
+            msgEl.style.color = titleColor; msgEl.style.textShadow = titleShadow;
             
             let myColor = amIWinner ? "#ffb6c1" : "#fff";
             let oppColor = amIWinner ? "#fff" : "#ffb6c1";
@@ -252,137 +200,113 @@
                 winModal.style.backgroundColor = "rgba(0, 0, 0, 0.95)";
                 winModalContent.style.borderColor = "#ffb6c1";
                 codeDivider.style.borderColor = "#ffb6c1";
-                sadEmojiContainer.innerHTML = ''; 
-                
-                // Fine, tiny glitter blasts
-                activeEffectInterval = setInterval(() => {
-                    confetti({
-                        particleCount: 120,
-                        spread: 360,
-                        startVelocity: 25,
-                        origin: { 
-                            x: Math.random() * 0.8 + 0.1, 
-                            y: Math.random() * 0.5 + 0.1  
-                        },
-                        colors: ['#ffb6c1', '#ffffff', '#ffd700', '#f4c2c2'], // Pinks, whites, soft golds
-                        shapes: ['circle'],
-                        scalar: 0.4, // Makes the particles look like tiny glitter
-                        gravity: 0.4, // Floats down softly
-                        ticks: 200,
-                        zIndex: 1001
-                    });
-                }, 800);
-
+                activeEffectInterval = setInterval(() => { confetti({ particleCount: 120, spread: 360, startVelocity: 25, origin: { x: Math.random(), y: Math.random() }, colors: ['#ffb6c1', '#ffffff', '#ffd700'], scalar: 0.4, gravity: 0.4, ticks: 200, zIndex: 1001 }); }, 800);
             } else {
                 winModal.style.backgroundColor = "rgba(10, 5, 10, 0.97)"; 
                 winModalContent.style.borderColor = "#553344"; 
                 winModalContent.style.backgroundColor = "#000"; 
                 codeDivider.style.borderColor = "#553344";
-                sadEmojiContainer.innerHTML = '';
-
-                // Spawns much slower falling sad faces
                 activeEffectInterval = setInterval(() => {
                     const face = document.createElement('div');
                     face.innerText = retroSadFaces[Math.floor(Math.random() * retroSadFaces.length)];
                     face.className = 'sad-face';
-                    
                     face.style.left = Math.random() * 100 + 'vw';
-                    // Increased duration to 12-18 seconds so they fall extremely slowly
                     face.style.animationDuration = (Math.random() * 6 + 12) + 's'; 
                     face.style.opacity = Math.random() * 0.3 + 0.4; 
-                    
                     sadEmojiContainer.appendChild(face);
-                    
-                    // Cleanup extended to accommodate the slow fall speed
-                    setTimeout(() => {
-                        if (face.parentNode) face.parentNode.removeChild(face);
-                    }, 19000); 
-
+                    setTimeout(() => { if (face.parentNode) face.parentNode.removeChild(face); }, 20000); 
                 }, 500); 
             }
-            
             winModal.classList.remove('hidden');
         }
 
         document.getElementById('closeWinModalBtn').onclick = () => {
             winModal.classList.add('hidden');
             sadEmojiContainer.innerHTML = ''; 
-            
-            if (activeEffectInterval) {
-                clearInterval(activeEffectInterval);
-                activeEffectInterval = null;
-            }
+            if (activeEffectInterval) { clearInterval(activeEffectInterval); activeEffectInterval = null; }
         };
 
+        // --- GAME LOGIC ---
         hostBtn.onclick = async () => {
-            myName = playerNameInput.value.trim();
-            isHost = true;
+            myName = playerNameInput.value.trim(); isHost = true;
             connStatus.innerText = "Status: Creating secure Cloud Room...";
-            
             const shortRoomId = generateShortId();
-            
             myInboxRef = ref(db, `rooms/${shortRoomId}/host_inbox`);
             oppInboxRef = ref(db, `rooms/${shortRoomId}/guest_inbox`);
-            
             await remove(ref(db, `rooms/${shortRoomId}`));
-
             document.getElementById('displayPeerId').innerText = shortRoomId;
-            setupScreen.classList.add('hidden');
-            gameScreen.classList.remove('hidden');
-            turnIndicator.innerText = "Waiting for an opponent to join the cloud room...";
-
-            onChildAdded(myInboxRef, (snapshot) => {
-                handleIncomingData(snapshot.val());
-            });
+            setupScreen.classList.add('hidden'); gameScreen.classList.remove('hidden');
+            onChildAdded(myInboxRef, (snapshot) => { handleIncomingData(snapshot.val()); });
         };
 
         joinBtn.onclick = () => {
-            myName = playerNameInput.value.trim();
-            isHost = false;
+            myName = playerNameInput.value.trim(); isHost = false;
             const targetId = document.getElementById('peerIdInput').value.trim().toUpperCase();
             if (!targetId) return alert("Please enter the Room ID first.");
-            
-            connStatus.innerText = "Status: Connecting to Cloud Room...";
-            
             myInboxRef = ref(db, `rooms/${targetId}/guest_inbox`);
             oppInboxRef = ref(db, `rooms/${targetId}/host_inbox`);
-
             document.getElementById('displayPeerId').innerText = targetId;
-            setupScreen.classList.add('hidden');
-            gameScreen.classList.remove('hidden');
-            turnIndicator.innerText = "Connecting to Host...";
-
-            onChildAdded(myInboxRef, (snapshot) => {
-                handleIncomingData(snapshot.val());
-            });
-
+            setupScreen.classList.add('hidden'); gameScreen.classList.remove('hidden');
+            onChildAdded(myInboxRef, (snapshot) => { handleIncomingData(snapshot.val()); });
             sendToOpponent({ type: 'INIT', name: myName });
         };
 
         function handleIncomingData(data) {
-            if (data.type === 'INIT') {
-                oppName = data.name;
-                turnIndicator.innerText = `Connected to ${oppName}. Please lock your 4-digit number.`;
-                lockSection.classList.remove('hidden');
-                initWinHistory();
-                
-                if (isHost) sendToOpponent({ type: 'INIT_ACK', name: myName });
+            if (data.type === 'INIT' || data.type === 'INIT_ACK') {
+                oppName = data.name; turnIndicator.innerText = `Connected to ${oppName}. Please lock your number.`;
+                lockSection.classList.remove('hidden'); initWinHistory();
+                if (data.type === 'INIT' && isHost) sendToOpponent({ type: 'INIT_ACK', name: myName });
             }
-            if (data.type === 'INIT_ACK') {
-                oppName = data.name;
-                turnIndicator.innerText = `Connected to ${oppName}. Please lock your 4-digit number.`;
-                lockSection.classList.remove('hidden');
-                initWinHistory();
+            if (data.type === 'LOCKED') { oppSecretNum = data.number; if (mySecretNum) startMatch(); }
+            if (data.type === 'GUESS') evaluateOpponentGuess(data.guess);
+            if (data.type === 'RESET_SCORES') processScoreReset(false);
+        }
+
+        function calculateCorrect(guess, secret) {
+            let correct = 0;
+            for (let i = 0; i < 4; i++) if (guess[i] === secret[i]) correct++;
+            return correct;
+        }
+
+        document.getElementById('lockBtn').onclick = () => {
+            const val = document.getElementById('lockInput').value.trim();
+            if (val.length !== 4 || isNaN(val)) return alert("Error: Must be 4 digits.");
+            mySecretNum = val; document.getElementById('displaySecretNumber').innerText = val; lockSection.classList.add('hidden');
+            sendToOpponent({ type: 'LOCKED', number: val });
+            if (oppSecretNum) startMatch();
+            else turnIndicator.innerText = `Number locked. Waiting for ${oppName}...`;
+        };
+
+        function startMatch() { myTurn = isHost ? roundStarter : !roundStarter; updateTurnUI(); guessSection.classList.remove('hidden'); }
+
+        document.getElementById('guessBtn').onclick = () => {
+            if (!myTurn) return alert("Wait! It's your opponent's turn.");
+            const guess = document.getElementById('guessInput').value.trim();
+            if (guess.length !== 4 || isNaN(guess)) return alert("Error: Enter a 4-digit guess.");
+            
+            let correct = calculateCorrect(guess, oppSecretNum);
+            
+            if (correct === 4) {
+                showWinScreen(myName, oppName, mySecretNum, oppSecretNum, true);
+                sendToOpponent({ type: 'GUESS', guess: guess });
+                winHistory[myName]++; saveAndRefreshHistory(); resetRound();
+            } else {
+                alert(`Digits correct: ${correct}`);
+                logToColumn('myLogs', `${guess} -> ${correct} correct`);
+                sendToOpponent({ type: 'GUESS', guess: guess });
+                myTurn = false; updateTurnUI(); document.getElementById('guessInput').value = "";
             }
-            if (data.type === 'LOCKED') {
-                oppSecretNum = data.number;
-                if (mySecretNum) startMatch();
-            }
-            if (data.type === 'GUESS') {
-                evaluateOpponentGuess(data.guess);
-            }
-            if (data.type === 'RESET_SCORES') {
-                processScoreReset(false);
+        };
+
+        function evaluateOpponentGuess(guess) {
+            let correct = calculateCorrect(guess, mySecretNum);
+            if (correct === 4) {
+                showWinScreen(oppName, myName, mySecretNum, oppSecretNum, false);
+                winHistory[oppName]++; saveAndRefreshHistory(); resetRound();
+            } else {
+                alert(`${oppName} guessed: ${correct} digits correct`);
+                logToColumn('oppLogs', `${guess} -> ${correct} correct`);
+                myTurn = true; updateTurnUI();
             }
         }
 
@@ -394,105 +318,18 @@
             updateWinHistoryUI();
         }
 
-        document.getElementById('lockBtn').onclick = () => {
-            const val = document.getElementById('lockInput').value.trim();
-            if (val.length !== 4 || isNaN(val)) return alert("Error: Must be exactly 4 digits.");
-            
-            mySecretNum = val;
-            document.getElementById('displaySecretNumber').innerText = val;
-            lockSection.classList.add('hidden');
-            
-            sendToOpponent({ type: 'LOCKED', number: val });
-            
-            if (oppSecretNum) {
-                startMatch();
-            } else {
-                turnIndicator.innerText = `Number locked. Waiting for ${oppName} to lock theirs...`;
-            }
-        };
-
-        function startMatch() {
-            myTurn = isHost ? roundStarter : !roundStarter; 
-            updateTurnUI();
-            guessSection.classList.remove('hidden');
-        }
-
-        document.getElementById('guessBtn').onclick = () => {
-            if (!myTurn) return alert("Wait! It's your opponent's turn.");
-            const guess = document.getElementById('guessInput').value.trim();
-            if (guess.length !== 4 || isNaN(guess)) return alert("Error: Enter a 4-digit guess.");
-
-            let correct = 0;
-            for (let i = 0; i < 4; i++) { if (guess[i] === oppSecretNum[i]) correct++; }
-
-            if (correct === 4) {
-                let savedMyCode = mySecretNum;
-                let savedOppCode = oppSecretNum;
-                
-                winHistory[myName]++;
-                saveAndRefreshHistory();
-                sendToOpponent({ type: 'GUESS', guess: guess });
-                resetRound(); 
-                
-                showWinScreen(myName, oppName, savedMyCode, savedOppCode, true); 
-                return;
-            } 
-            
-            let msg = correct > 0 ? `${correct} digit${correct > 1 ? 's' : ''} correct` : "Try again";
-            logToColumn('myLogs', `${guess} -> ${msg}`);
-            
-            sendToOpponent({ type: 'GUESS', guess: guess });
-            myTurn = false;
-            updateTurnUI();
-            document.getElementById('guessInput').value = "";
-        };
-
-        function evaluateOpponentGuess(guess) {
-            let correct = 0;
-            for (let i = 0; i < 4; i++) { if (guess[i] === mySecretNum[i]) correct++; }
-
-            if (correct === 4) {
-                let savedMyCode = mySecretNum;
-                let savedOppCode = oppSecretNum;
-                
-                winHistory[oppName]++;
-                saveAndRefreshHistory();
-                resetRound();
-                
-                showWinScreen(oppName, myName, savedMyCode, savedOppCode, false); 
-                return;
-            } 
-            
-            let msg = correct > 0 ? `${correct} digit${correct > 1 ? 's' : ''} correct` : "Try again";
-            logToColumn('oppLogs', `${guess} -> ${msg}`);
-            myTurn = true;
-            updateTurnUI();
-        }
-
-        function updateTurnUI() { turnIndicator.innerText = myTurn ? "YOUR TURN: Enter a guess." : `Waiting for ${oppName} to guess...`; }
+        function updateTurnUI() { turnIndicator.innerText = myTurn ? "YOUR TURN: Enter a guess." : `Waiting for ${oppName}...`; }
         function logToColumn(id, text) { document.getElementById(id).innerHTML += `<div>> ${text}</div>`; }
         function saveAndRefreshHistory() { localStorage.setItem('daro_history_v2', JSON.stringify(winHistory)); updateWinHistoryUI(); }
         function updateWinHistoryUI() { document.getElementById('winHistoryLog').innerText = `${myName.toUpperCase()}: ${winHistory[myName] || 0} Wins | ${oppName.toUpperCase()}: ${winHistory[oppName] || 0} Wins`; }
-        
-        document.getElementById('resetScoresBtn').onclick = () => {
-            if (confirm("Clear scoreboard for this session?")) { processScoreReset(true); }
-        };
-
-        function processScoreReset(isInitiator) {
-            winHistory[myName] = 0; winHistory[oppName] = 0;
-            saveAndRefreshHistory();
-            if (isInitiator) sendToOpponent({ type: 'RESET_SCORES' });
-        }
-
+        document.getElementById('resetScoresBtn').onclick = () => { if (confirm("Clear scoreboard?")) processScoreReset(true); };
+        function processScoreReset(isInitiator) { winHistory[myName] = 0; winHistory[oppName] = 0; saveAndRefreshHistory(); if (isInitiator) sendToOpponent({ type: 'RESET_SCORES' }); }
         function resetRound() {
-            mySecretNum = ""; oppSecretNum = "";
-            document.getElementById('myLogs').innerHTML = ""; document.getElementById('oppLogs').innerHTML = "";
+            mySecretNum = ""; oppSecretNum = ""; document.getElementById('myLogs').innerHTML = ""; document.getElementById('oppLogs').innerHTML = "";
             document.getElementById('lockInput').value = ""; document.getElementById('guessInput').value = "";
             document.getElementById('displaySecretNumber').innerText = "NOT LOCKED YET";
-            lockSection.classList.remove('hidden'); 
-            guessSection.classList.add('hidden');
-            roundStarter = !roundStarter;
-            turnIndicator.innerText = "Round over. Lock a new number to start a new match!";
+            lockSection.classList.remove('hidden'); guessSection.classList.add('hidden');
+            roundStarter = !roundStarter; turnIndicator.innerText = "Round over. Lock a new number!";
         }
     </script>
 </body>
