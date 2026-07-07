@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DARO HEART - Terminal</title>
+    <title>DARO - Terminal</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
     <style>
         * { box-sizing: border-box; }
@@ -40,9 +40,11 @@
         .reset-btn { border-color: #f00; color: #f00; font-size: 14px; padding: 8px; width: auto; }
         .reset-btn:hover:not(:disabled) { background: #300; }
         .secret-display { color: #ff0; font-weight: bold; }
-        .heart-icon { color: #ffb6c1; text-shadow: 0 0 8px #ffb6c1; } 
+        
+        /* 2D Flat Heart CSS */
+        .heart-icon { color: #ffb6c1; text-shadow: 0 0 8px #ffb6c1; font-family: sans-serif; display: inline-block; } 
 
-        /* Win Overlay Modal Styling - Flattened for 2D look */
+        /* Win Overlay Modal Styling */
         #winModal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(0, 0, 0, 0.95);
@@ -52,17 +54,11 @@
             overflow: hidden;
         }
         #winModalContent {
-            border: 4px solid #ffb6c1; /* Flat 2D Baby Pink Border */
-            padding: 30px; background: #000;
+            border: 2px dashed #ffb6c1; padding: 30px; background: #000;
             max-width: 500px; width: 100%; text-align: center; position: relative;
             z-index: 1002; transition: all 0.5s;
         }
-        #winMessageText { 
-            font-size: 32px; 
-            margin-top: 0; 
-            text-shadow: none; /* Removed glow for flat 2D feel */
-            font-weight: bold;
-        }
+        #winMessageText { font-size: 28px; margin-top: 0; transition: color 0.3s; }
         .code-reveal { font-size: 20px; margin: 10px 0; color: #fff; }
         .code-reveal span { font-weight: bold; font-size: 24px; }
         
@@ -75,7 +71,7 @@
         .sad-face {
             position: absolute;
             top: -50px;
-            color: #ffb6c1; /* Theme color */
+            color: #ffb6c1; 
             font-size: 22px;
             pointer-events: none;
             animation: slowFall linear forwards;
@@ -101,7 +97,7 @@
         <div id="sadEmojiContainer"></div>
         <div id="winModalContent">
             <h1 id="winMessageText"></h1>
-            <div id="codeDivider" style="border-top: 2px dashed #ffb6c1; border-bottom: 2px dashed #ffb6c1; padding: 15px 0; margin: 20px 0;">
+            <div id="codeDivider" style="border-top: 1px solid #ffb6c1; border-bottom: 1px solid #ffb6c1; padding: 15px 0; margin: 20px 0;">
                 <div id="myCodeReveal" class="code-reveal"></div>
                 <div id="oppCodeReveal" class="code-reveal"></div>
             </div>
@@ -109,7 +105,7 @@
         </div>
     </div>
 
-    <h1><span class="heart-icon">❤️</span> DARO HEART TERMINAL <span class="heart-icon">❤️</span></h1>
+    <h1><span class="heart-icon">♥</span> DARO TERMINAL <span class="heart-icon">♥</span></h1>
 
     <div id="setupScreen" class="setup-screen">
         <div>
@@ -212,7 +208,6 @@
         const codeDivider = document.getElementById('codeDivider');
         const sadEmojiContainer = document.getElementById('sadEmojiContainer');
 
-        // The retro sad faces to fall down the screen
         const retroSadFaces = [':(', 'T_T', ';_;', '</3', 'x_x', '☹'];
 
         playerNameInput.addEventListener('input', (e) => {
@@ -236,20 +231,26 @@
 
         // --- GLITTER, EMOJIS, & WIN DISPLAY FUNCTION ---
         function showWinScreen(winnerName, loserName, myCode, oppCode, amIWinner) {
-            const winMsgText = document.getElementById('winMessageText');
-            winMsgText.innerHTML = `${winnerName} ❤️ ${loserName}<br><br>${winnerName.toUpperCase()} WINS!`;
             
-            // Set dynamic colors based on who won
-            let myColor = amIWinner ? "#E0BFB8" : "#fff"; // Rose Gold for winner
-            let oppColor = amIWinner ? "#fff" : "#E0BFB8";
+            // Dynamic text colors (Rose Gold for win, Sage Green for loss)
+            const titleColor = amIWinner ? "#e0bfb8" : "#9dc183";
+            const titleShadow = amIWinner ? "0 0 10px #e0bfb8" : "0 0 10px #9dc183";
+            
+            const msgEl = document.getElementById('winMessageText');
+            msgEl.innerHTML = `${winnerName} <span class="heart-icon">♥</span> ${loserName}<br><br>${winnerName.toUpperCase()} WINS!`;
+            msgEl.style.color = titleColor;
+            msgEl.style.textShadow = titleShadow;
+            
+            let myColor = amIWinner ? "#ffb6c1" : "#fff";
+            let oppColor = amIWinner ? "#fff" : "#ffb6c1";
             
             document.getElementById('myCodeReveal').innerHTML = `${myName.toUpperCase()}'S CODE: <span style="color:${myColor}">${myCode}</span>`;
             document.getElementById('oppCodeReveal').innerHTML = `${oppName.toUpperCase()}'S CODE: <span style="color:${oppColor}">${oppCode}</span>`;
             
             if (amIWinner) {
-                // I WON (ROSE GOLD TEXT)
                 winModal.style.backgroundColor = "rgba(0, 0, 0, 0.95)";
-                winMsgText.style.color = "#E0BFB8"; // Rose Gold
+                winModalContent.style.borderColor = "#ffb6c1";
+                codeDivider.style.borderColor = "#ffb6c1";
                 sadEmojiContainer.innerHTML = ''; 
                 
                 activeEffectInterval = setInterval(() => {
@@ -265,9 +266,10 @@
                 }, 800);
 
             } else {
-                // I LOST (SAGE GREEN TEXT)
                 winModal.style.backgroundColor = "rgba(10, 5, 10, 0.97)"; 
-                winMsgText.style.color = "#9DC183"; // Sage Green
+                winModalContent.style.borderColor = "#553344"; 
+                winModalContent.style.backgroundColor = "#000"; 
+                codeDivider.style.borderColor = "#553344";
                 sadEmojiContainer.innerHTML = '';
 
                 activeEffectInterval = setInterval(() => {
@@ -293,7 +295,7 @@
 
         document.getElementById('closeWinModalBtn').onclick = () => {
             winModal.classList.add('hidden');
-            sadEmojiContainer.innerHTML = ''; // Clear sad faces
+            sadEmojiContainer.innerHTML = ''; 
             
             if (activeEffectInterval) {
                 clearInterval(activeEffectInterval);
