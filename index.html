@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DARO - Terminal</title>
-    <!-- Glitter Confetti Library -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
     <style>
         * { box-sizing: border-box; }
@@ -16,6 +15,7 @@
             font-family: 'Courier New', Courier, monospace;
             padding: 20px; margin: 0;
             min-height: 100vh;
+            overflow-x: hidden;
         }
         h1 { text-align: center; border-bottom: 1px solid #ffb6c1; padding-bottom: 10px; font-size: 24px; }
         .setup-screen, .game-screen { display: flex; flex-direction: column; gap: 15px; max-width: 600px; margin: 0 auto; background: rgba(0, 0, 0, 0.7); border-radius: 8px; padding: 10px; }
@@ -49,6 +49,7 @@
             z-index: 1000; display: flex; flex-direction: column;
             justify-content: center; align-items: center; padding: 20px;
             transition: background-color 0.5s;
+            overflow: hidden;
         }
         #winModalContent {
             border: 2px dashed #ffb6c1; padding: 30px; background: #000;
@@ -59,11 +60,24 @@
         .code-reveal { font-size: 20px; margin: 10px 0; color: #fff; }
         .code-reveal span { font-weight: bold; font-size: 24px; }
         
-        /* Storm Clouds for Loser */
-        #stormClouds {
-            position: absolute; top: -40px; left: 0; width: 100%;
-            font-size: 45px; text-align: center; letter-spacing: 10px;
-            opacity: 0.8; z-index: 1001; pointer-events: none;
+        /* Sad Emojis Container for Loser */
+        #sadEmojiContainer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 1001;
+        }
+
+        .sad-face {
+            position: absolute;
+            top: -50px;
+            color: #ffb6c1; /* Theme color */
+            font-size: 22px;
+            pointer-events: none;
+            animation: slowFall linear forwards;
+        }
+
+        @keyframes slowFall {
+            0% { transform: translateY(0) rotate(0deg); }
+            100% { transform: translateY(110vh) rotate(360deg); }
         }
 
         @media (max-width: 600px) {
@@ -72,15 +86,13 @@
             .column { height: 200px; }
             .history-controls { flex-direction: column; align-items: flex-start; }
             .reset-btn { width: 100%; }
-            #stormClouds { font-size: 35px; top: -30px; }
         }
     </style>
 </head>
 <body>
 
-    <!-- WIN OVERLAY -->
     <div id="winModal" class="hidden">
-        <div id="stormClouds" class="hidden">☁️ ⛈️ ☁️ 🌧️ ☁️</div>
+        <div id="sadEmojiContainer"></div>
         <div id="winModalContent">
             <h1 id="winMessageText"></h1>
             <div id="codeDivider" style="border-top: 1px solid #ffb6c1; border-bottom: 1px solid #ffb6c1; padding: 15px 0; margin: 20px 0;">
@@ -192,7 +204,10 @@
         const winModal = document.getElementById('winModal');
         const winModalContent = document.getElementById('winModalContent');
         const codeDivider = document.getElementById('codeDivider');
-        const stormClouds = document.getElementById('stormClouds');
+        const sadEmojiContainer = document.getElementById('sadEmojiContainer');
+
+        // The retro sad faces to fall down the screen
+        const retroSadFaces = [':(', 'T_T', ';_;', '</3', 'x_x', '☹'];
 
         playerNameInput.addEventListener('input', (e) => {
             const hasName = e.target.value.trim().length > 0;
@@ -213,7 +228,7 @@
             if (oppInboxRef) push(oppInboxRef, data);
         }
 
-        // --- GLITTER, SLOW RAIN, & WIN DISPLAY FUNCTION ---
+        // --- GLITTER, EMOJIS, & WIN DISPLAY FUNCTION ---
         function showWinScreen(winnerName, loserName, myCode, oppCode, amIWinner) {
             document.getElementById('winMessageText').innerHTML = `${winnerName} ❤️ ${loserName}<br><br>${winnerName.toUpperCase()} WINS!`;
             
@@ -227,7 +242,7 @@
                 winModal.style.backgroundColor = "rgba(0, 0, 0, 0.95)";
                 winModalContent.style.borderColor = "#ffb6c1";
                 codeDivider.style.borderColor = "#ffb6c1";
-                stormClouds.classList.add('hidden');
+                sadEmojiContainer.innerHTML = ''; // Ensure container is empty
                 
                 // Colorful rainbow confetti for the winner
                 activeEffectInterval = setInterval(() => {
@@ -243,27 +258,32 @@
                 }, 800);
 
             } else {
-                winModal.style.backgroundColor = "rgba(5, 10, 20, 0.95)"; 
-                winModalContent.style.borderColor = "#4682b4"; 
-                winModalContent.style.backgroundColor = "#03060a"; 
-                codeDivider.style.borderColor = "#4682b4";
-                stormClouds.classList.remove('hidden');
+                // Heavily darken the screen for the loser
+                winModal.style.backgroundColor = "rgba(10, 5, 10, 0.97)"; 
+                winModalContent.style.borderColor = "#553344"; // Dark muted border
+                winModalContent.style.backgroundColor = "#000"; 
+                codeDivider.style.borderColor = "#553344";
+                sadEmojiContainer.innerHTML = '';
 
-                // SLOW falling tiny circles that simulate straight rain drops
+                // Spawn slow falling semi-transparent retro sad faces
                 activeEffectInterval = setInterval(() => {
-                    confetti({
-                        particleCount: 4,       
-                        angle: 270,             // Straight down
-                        spread: 15,             // Minimal sideways drift
-                        origin: { x: Math.random(), y: -0.1 }, // Random spot at the very top
-                        colors: ['#a0c4ff', '#4682b4', '#708090'], // Rain colors
-                        shapes: ['circle'],     // Round drops, no fluttering paper
-                        gravity: 0.4,           // Changed from 2.5 to 0.4 for SLOW fall
-                        scalar: 0.5,            // Tiny drops
-                        ticks: 600,             // Live longer so they reach the bottom slowly
-                        zIndex: 1001
-                    });
-                }, 100); 
+                    const face = document.createElement('div');
+                    face.innerText = retroSadFaces[Math.floor(Math.random() * retroSadFaces.length)];
+                    face.className = 'sad-face';
+                    
+                    // Randomize position, speed, and opacity
+                    face.style.left = Math.random() * 100 + 'vw';
+                    face.style.animationDuration = (Math.random() * 4 + 5) + 's'; // Falls very slowly (5 to 9 seconds)
+                    face.style.opacity = Math.random() * 0.3 + 0.4; // Transparent but visible (0.4 to 0.7)
+                    
+                    sadEmojiContainer.appendChild(face);
+                    
+                    // Clean up element after it falls off screen
+                    setTimeout(() => {
+                        if (face.parentNode) face.parentNode.removeChild(face);
+                    }, 10000); 
+
+                }, 400); // Spawns a new face every 400ms
             }
             
             winModal.classList.remove('hidden');
@@ -271,6 +291,8 @@
 
         document.getElementById('closeWinModalBtn').onclick = () => {
             winModal.classList.add('hidden');
+            sadEmojiContainer.innerHTML = ''; // Clear sad faces
+            
             if (activeEffectInterval) {
                 clearInterval(activeEffectInterval);
                 activeEffectInterval = null;
